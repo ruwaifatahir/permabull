@@ -1,22 +1,17 @@
 import { ethers } from "hardhat";
 
+const ROUTER_ADDRESS = "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3";
+
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+  const [owner] = await ethers.getSigners();
+  const permabull = await ethers.deployContract("Permabull", [
+    owner,
+    ROUTER_ADDRESS,
+  ]);
 
-  const lockedAmount = ethers.parseEther("0.001");
+  await permabull.waitForDeployment();
 
-  const lock = await ethers.deployContract("Lock", [unlockTime], {
-    value: lockedAmount,
-  });
-
-  await lock.waitForDeployment();
-
-  console.log(
-    `Lock with ${ethers.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.target}`
-  );
+  console.log(`Permabull Address: ${await permabull.getAddress()}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
