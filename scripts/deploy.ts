@@ -1,9 +1,15 @@
 import { ethers } from "hardhat";
 
-const ROUTER_ADDRESS = "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3";
-
 async function main() {
-  const permabull = await ethers.deployContract("Permabull");
+  const [owner] = await ethers.getSigners();
+  const permabull = await ethers.deployContract("Permabull", [
+    owner.address,
+    "Permabull",
+    "PMB",
+    9,
+    ethers.parseUnits("1000000000000000", 9),
+    owner.address,
+  ]);
 
   await permabull.waitForDeployment();
 

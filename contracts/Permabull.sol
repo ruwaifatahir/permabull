@@ -1,29 +1,5 @@
-/**
- *Submitted for verification at BscScan.com on 2021-03-01
- */
-
-/**
- *Submitted for verification at BscScan.com on 2021-03-01
- */
-
-/**
-  
-   #BEE
-   
-   #LIQ+#RFI+#SHIB+#DOGE = #BEE
-
-   #SAFEMOON features:
-   3% fee auto add to the liquidity pool to locked forever when selling
-   2% fee auto distribute to all holders
-   I created a black hole so #Bee token will deflate itself in supply with every transaction
-   50% Supply is burned at start.
-   
-
- */
-
 pragma solidity ^0.6.12;
 
-// SPDX-License-Identifier: Unlicensed
 interface IERC20 {
     function totalSupply() external view returns (uint256);
 
@@ -106,20 +82,6 @@ interface IERC20 {
     );
 }
 
-/**
- * @dev Wrappers over Solidity's arithmetic operations with added overflow
- * checks.
- *
- * Arithmetic operations in Solidity wrap on overflow. This can easily result
- * in bugs, because programmers usually assume that an overflow raises an
- * error, which is the standard behavior in high level programming languages.
- * `SafeMath` restores this intuition by reverting the transaction when an
- * operation overflows.
- *
- * Using this library instead of the unchecked operations eliminates an entire
- * class of bugs, so it's recommended to use it always.
- */
-
 library SafeMath {
     /**
      * @dev Returns the addition of two unsigned integers, reverting on
@@ -128,7 +90,6 @@ library SafeMath {
      * Counterpart to Solidity's `+` operator.
      *
      * Requirements:
-     *
      * - Addition cannot overflow.
      */
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -145,7 +106,6 @@ library SafeMath {
      * Counterpart to Solidity's `-` operator.
      *
      * Requirements:
-     *
      * - Subtraction cannot overflow.
      */
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -159,7 +119,6 @@ library SafeMath {
      * Counterpart to Solidity's `-` operator.
      *
      * Requirements:
-     *
      * - Subtraction cannot overflow.
      */
     function sub(
@@ -180,7 +139,6 @@ library SafeMath {
      * Counterpart to Solidity's `*` operator.
      *
      * Requirements:
-     *
      * - Multiplication cannot overflow.
      */
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -206,7 +164,6 @@ library SafeMath {
      * uses an invalid opcode to revert (consuming all remaining gas).
      *
      * Requirements:
-     *
      * - The divisor cannot be zero.
      */
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -222,7 +179,6 @@ library SafeMath {
      * uses an invalid opcode to revert (consuming all remaining gas).
      *
      * Requirements:
-     *
      * - The divisor cannot be zero.
      */
     function div(
@@ -230,6 +186,7 @@ library SafeMath {
         uint256 b,
         string memory errorMessage
     ) internal pure returns (uint256) {
+        // Solidity only automatically asserts when dividing by 0
         require(b > 0, errorMessage);
         uint256 c = a / b;
         // assert(a == b * c + a % b); // There is no case in which this doesn't hold
@@ -246,7 +203,6 @@ library SafeMath {
      * invalid opcode to revert (consuming all remaining gas).
      *
      * Requirements:
-     *
      * - The divisor cannot be zero.
      */
     function mod(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -262,7 +218,6 @@ library SafeMath {
      * invalid opcode to revert (consuming all remaining gas).
      *
      * Requirements:
-     *
      * - The divisor cannot be zero.
      */
     function mod(
@@ -276,19 +231,20 @@ library SafeMath {
 }
 
 abstract contract Context {
-    function _msgSender() internal view virtual returns (address payable) {
+    // Empty internal constructor, to prevent people from mistakenly deploying
+    // an instance of this contract, which should be used via inheritance.
+    constructor() internal {}
+
+    function _msgSender() internal view returns (address payable) {
         return msg.sender;
     }
 
-    function _msgData() internal view virtual returns (bytes memory) {
+    function _msgData() internal view returns (bytes memory) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         return msg.data;
     }
 }
 
-/**
- * @dev Collection of functions related to the address type
- */
 library Address {
     /**
      * @dev Returns true if `account` is a contract.
@@ -464,18 +420,6 @@ library Address {
     }
 }
 
-/**
- * @dev Contract module which provides a basic access control mechanism, where
- * there is an account (an owner) that can be granted exclusive access to
- * specific functions.
- *
- * By default, the owner account will be the one that deploys the contract. This
- * can later be changed with {transferOwnership}.
- *
- * This module is used through inheritance. It will make available the modifier
- * `onlyOwner`, which can be applied to your functions to restrict their use to
- * the owner.
- */
 contract Ownable is Context {
     address private _owner;
     address private _previousOwner;
@@ -559,8 +503,6 @@ contract Ownable is Context {
     }
 }
 
-// pragma solidity >=0.5.0;
-
 interface IUniswapV2Factory {
     event PairCreated(
         address indexed token0,
@@ -591,8 +533,6 @@ interface IUniswapV2Factory {
 
     function setFeeToSetter(address) external;
 }
-
-// pragma solidity >=0.5.0;
 
 interface IUniswapV2Pair {
     event Approval(address indexed owner, address indexed spender, uint value);
@@ -692,8 +632,6 @@ interface IUniswapV2Pair {
 
     function initialize(address, address) external;
 }
-
-// pragma solidity >=0.6.2;
 
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
@@ -844,8 +782,6 @@ interface IUniswapV2Router01 {
     ) external view returns (uint[] memory amounts);
 }
 
-// pragma solidity >=0.6.2;
-
 interface IUniswapV2Router02 is IUniswapV2Router01 {
     function removeLiquidityETHSupportingFeeOnTransferTokens(
         address token,
@@ -906,23 +842,28 @@ contract Permabull is Context, IERC20, Ownable {
     mapping(address => bool) private _isExcluded;
     address[] private _excluded;
 
+    address payable charityWallet = 0x67F78C9C58a613c2f7eAff906AcB22335a5596CF;
+
     uint256 private constant MAX = ~uint256(0);
-    uint256 private _tTotal = 1000000000 * 10 ** 6 * 10 ** 9;
+    uint256 private constant _tTotal = 10000 * 10 ** 9;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = "Permabull";
-    string private _symbol = "PMB";
-    uint8 private _decimals = 9;
+    string private constant _name = "Saint Token";
+    string private constant _symbol = "Saint";
+    uint8 private constant _decimals = 9;
 
-    uint256 public _taxFee = 5;
+    uint256 public _taxFee = 10;
     uint256 private _previousTaxFee = _taxFee;
 
-    uint256 public _liquidityFee = 5;
+    uint256 public _devFee = 0;
+    uint256 private _previousDevFee = _devFee;
+
+    uint256 public _liquidityFee = 0;
     uint256 private _previousLiquidityFee = _liquidityFee;
 
-    IUniswapV2Router02 public immutable uniswapV2Router;
-    address public immutable uniswapV2Pair;
+    IUniswapV2Router02 public uniswapV2Router;
+    address public uniswapV2Pair;
 
     bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = true;
@@ -935,8 +876,9 @@ contract Permabull is Context, IERC20, Ownable {
     event SwapAndLiquify(
         uint256 tokensSwapped,
         uint256 ethReceived,
-        uint256 tokensIntoLiqudity
+        uint256 tokensIntoLiquidity
     );
+    event AddLiquidityETH(uint amountA, uint amountB, uint liquidity);
 
     modifier lockTheSwap() {
         inSwapAndLiquify = true;
@@ -949,8 +891,8 @@ contract Permabull is Context, IERC20, Ownable {
 
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
             0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3
-        );
-        // Create a uniswap pair for this new token
+        ); // v2 testnet 0xD99D1c33F9fC3444f8101754aBC46c52416550D1
+        // Create a pancakeswap pair for this new token
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
             .createPair(address(this), _uniswapV2Router.WETH());
 
@@ -960,19 +902,18 @@ contract Permabull is Context, IERC20, Ownable {
         //exclude owner and this contract from fee
         _isExcludedFromFee[owner()] = true;
         _isExcludedFromFee[address(this)] = true;
-
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
 
-    function name() public view returns (string memory) {
+    function name() public pure returns (string memory) {
         return _name;
     }
 
-    function symbol() public view returns (string memory) {
+    function symbol() public pure returns (string memory) {
         return _symbol;
     }
 
-    function decimals() public view returns (uint8) {
+    function decimals() public pure returns (uint8) {
         return _decimals;
     }
 
@@ -1019,7 +960,7 @@ contract Permabull is Context, IERC20, Ownable {
             _msgSender(),
             _allowances[sender][_msgSender()].sub(
                 amount,
-                "ERC20: transfer amount exceeds allowance"
+                "BEP20: transfer amount exceeds allowance"
             )
         );
         return true;
@@ -1046,7 +987,7 @@ contract Permabull is Context, IERC20, Ownable {
             spender,
             _allowances[_msgSender()][spender].sub(
                 subtractedValue,
-                "ERC20: decreased allowance below zero"
+                "BEP20: decreased allowance below zero"
             )
         );
         return true;
@@ -1060,17 +1001,18 @@ contract Permabull is Context, IERC20, Ownable {
         return _tFeeTotal;
     }
 
-    function deliver(uint256 tAmount) public {
-        address sender = _msgSender();
-        require(
-            !_isExcluded[sender],
-            "Excluded addresses cannot call this function"
-        );
-        (uint256 rAmount, , , , , ) = _getValues(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rTotal = _rTotal.sub(rAmount);
-        _tFeeTotal = _tFeeTotal.add(tAmount);
-    }
+    /* removed function due to security concerns
+     See "SSL-12 | The purpose of function deliver" from the Certik audit of safemoon
+     
+  function deliver(uint256 tAmount) public {
+      address sender = _msgSender();
+      require(!_isExcluded[sender], "Excluded addresses cannot call this function");
+      (uint256 rAmount,,,,,,) = _getValues(tAmount);
+      _rOwned[sender] = _rOwned[sender].sub(rAmount);
+      _rTotal = _rTotal.sub(rAmount);
+      _tFeeTotal = _tFeeTotal.add(tAmount);
+  }
+  */
 
     function reflectionFromToken(
         uint256 tAmount,
@@ -1078,10 +1020,10 @@ contract Permabull is Context, IERC20, Ownable {
     ) public view returns (uint256) {
         require(tAmount <= _tTotal, "Amount must be less than supply");
         if (!deductTransferFee) {
-            (uint256 rAmount, , , , , ) = _getValues(tAmount);
+            (uint256 rAmount, , , , , , ) = _getValues(tAmount);
             return rAmount;
         } else {
-            (, uint256 rTransferAmount, , , , ) = _getValues(tAmount);
+            (, uint256 rTransferAmount, , , , , ) = _getValues(tAmount);
             return rTransferAmount;
         }
     }
@@ -1098,7 +1040,7 @@ contract Permabull is Context, IERC20, Ownable {
     }
 
     function excludeFromReward(address account) public onlyOwner {
-        // require(account != 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D, 'We can not exclude Uniswap router.');
+        // require(account != 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D, 'We can not exclude Pancakeswap router.');
         require(!_isExcluded[account], "Account is already excluded");
         if (_rOwned[account] > 0) {
             _tOwned[account] = tokenFromReflection(_rOwned[account]);
@@ -1108,7 +1050,11 @@ contract Permabull is Context, IERC20, Ownable {
     }
 
     function includeInReward(address account) external onlyOwner {
-        require(_isExcluded[account], "Account is already excluded");
+        /* Changed error message to "Account not excluded"
+         See "SSL-01 | Incorrect error message" from the Certik
+         audit of safemoon.
+      */
+        require(_isExcluded[account], "Account not excluded");
         for (uint256 i = 0; i < _excluded.length; i++) {
             if (_excluded[i] == account) {
                 _excluded[i] = _excluded[_excluded.length - 1];
@@ -1131,13 +1077,15 @@ contract Permabull is Context, IERC20, Ownable {
             uint256 rFee,
             uint256 tTransferAmount,
             uint256 tFee,
-            uint256 tLiquidity
+            uint256 tLiquidity,
+            uint256 tDev
         ) = _getValues(tAmount);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
         _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _takeLiquidity(tLiquidity);
+        _takeDev(tDev);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
     }
@@ -1154,6 +1102,10 @@ contract Permabull is Context, IERC20, Ownable {
         _taxFee = taxFee;
     }
 
+    function setDevFeePercent(uint256 devFee) external onlyOwner {
+        _devFee = devFee;
+    }
+
     function setLiquidityFeePercent(uint256 liquidityFee) external onlyOwner {
         _liquidityFee = liquidityFee;
     }
@@ -1167,7 +1119,7 @@ contract Permabull is Context, IERC20, Ownable {
         emit SwapAndLiquifyEnabledUpdated(_enabled);
     }
 
-    //to recieve ETH from uniswapV2Router when swaping
+    //to recieve BNB from pancakeswapV2Router when swaping
     receive() external payable {}
 
     function _reflectFee(uint256 rFee, uint256 tFee) private {
@@ -1180,17 +1132,19 @@ contract Permabull is Context, IERC20, Ownable {
     )
         private
         view
-        returns (uint256, uint256, uint256, uint256, uint256, uint256)
+        returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256)
     {
         (
             uint256 tTransferAmount,
             uint256 tFee,
-            uint256 tLiquidity
+            uint256 tLiquidity,
+            uint tDev
         ) = _getTValues(tAmount);
         (uint256 rAmount, uint256 rTransferAmount, uint256 rFee) = _getRValues(
             tAmount,
             tFee,
             tLiquidity,
+            tDev,
             _getRate()
         );
         return (
@@ -1199,29 +1153,33 @@ contract Permabull is Context, IERC20, Ownable {
             rFee,
             tTransferAmount,
             tFee,
-            tLiquidity
+            tLiquidity,
+            tDev
         );
     }
 
     function _getTValues(
         uint256 tAmount
-    ) private view returns (uint256, uint256, uint256) {
+    ) private view returns (uint256, uint256, uint256, uint256) {
         uint256 tFee = calculateTaxFee(tAmount);
+        uint256 tDev = calculateDevFee(tAmount);
         uint256 tLiquidity = calculateLiquidityFee(tAmount);
-        uint256 tTransferAmount = tAmount.sub(tFee).sub(tLiquidity);
-        return (tTransferAmount, tFee, tLiquidity);
+        uint256 tTransferAmount = tAmount.sub(tFee).sub(tLiquidity).sub(tDev);
+        return (tTransferAmount, tFee, tLiquidity, tDev);
     }
 
     function _getRValues(
         uint256 tAmount,
         uint256 tFee,
         uint256 tLiquidity,
+        uint256 tDev,
         uint256 currentRate
     ) private pure returns (uint256, uint256, uint256) {
         uint256 rAmount = tAmount.mul(currentRate);
         uint256 rFee = tFee.mul(currentRate);
         uint256 rLiquidity = tLiquidity.mul(currentRate);
-        uint256 rTransferAmount = rAmount.sub(rFee).sub(rLiquidity);
+        uint256 rDev = tDev.mul(currentRate);
+        uint256 rTransferAmount = rAmount.sub(rFee).sub(rLiquidity).sub(rDev);
         return (rAmount, rTransferAmount, rFee);
     }
 
@@ -1253,8 +1211,20 @@ contract Permabull is Context, IERC20, Ownable {
             _tOwned[address(this)] = _tOwned[address(this)].add(tLiquidity);
     }
 
+    function _takeDev(uint256 tDev) private {
+        uint256 currentRate = _getRate();
+        uint256 rDev = tDev.mul(currentRate);
+        _rOwned[charityWallet] = _rOwned[charityWallet].add(rDev);
+        if (_isExcluded[charityWallet])
+            _tOwned[charityWallet] = _tOwned[charityWallet].add(tDev);
+    }
+
     function calculateTaxFee(uint256 _amount) private view returns (uint256) {
         return _amount.mul(_taxFee).div(10 ** 2);
+    }
+
+    function calculateDevFee(uint256 _amount) private view returns (uint256) {
+        return _amount.mul(_devFee).div(10 ** 2);
     }
 
     function calculateLiquidityFee(
@@ -1264,18 +1234,21 @@ contract Permabull is Context, IERC20, Ownable {
     }
 
     function removeAllFee() private {
-        if (_taxFee == 0 && _liquidityFee == 0) return;
+        if (_taxFee == 0 && _liquidityFee == 0 && _devFee == 0) return;
 
         _previousTaxFee = _taxFee;
         _previousLiquidityFee = _liquidityFee;
+        _previousDevFee = _devFee;
 
         _taxFee = 0;
         _liquidityFee = 0;
+        _devFee = 0;
     }
 
     function restoreAllFee() private {
         _taxFee = _previousTaxFee;
         _liquidityFee = _previousLiquidityFee;
+        _devFee = _previousDevFee;
     }
 
     function isExcludedFromFee(address account) public view returns (bool) {
@@ -1283,16 +1256,16 @@ contract Permabull is Context, IERC20, Ownable {
     }
 
     function _approve(address owner, address spender, uint256 amount) private {
-        require(owner != address(0), "ERC20: approve from the zero address");
-        require(spender != address(0), "ERC20: approve to the zero address");
+        require(owner != address(0), "BEP20: approve from the zero address");
+        require(spender != address(0), "BEP20: approve to the zero address");
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
 
     function _transfer(address from, address to, uint256 amount) private {
-        require(from != address(0), "ERC20: transfer from the zero address");
-        require(to != address(0), "ERC20: transfer to the zero address");
+        require(from != address(0), "BEP20: transfer from the zero address");
+        require(to != address(0), "BEP20: transfer to the zero address");
         require(amount > 0, "Transfer amount must be greater than zero");
         if (from != owner() && to != owner())
             require(
@@ -1303,7 +1276,7 @@ contract Permabull is Context, IERC20, Ownable {
         // is the token balance of this contract address over the min number of
         // tokens that we need to initiate a swap + liquidity lock?
         // also, don't get caught in a circular liquidity event.
-        // also, don't swap & liquify if sender is uniswap pair.
+        // also, don't swap & liquify if sender is pancakeswap pair.
         uint256 contractTokenBalance = balanceOf(address(this));
 
         if (contractTokenBalance >= _maxTxAmount) {
@@ -1331,7 +1304,7 @@ contract Permabull is Context, IERC20, Ownable {
             takeFee = false;
         }
 
-        //transfer amount, it will take tax, burn, liquidity fee
+        //transfer amount, it will take tax, dev, liquidity fee
         _tokenTransfer(from, to, amount, takeFee);
     }
 
@@ -1340,26 +1313,44 @@ contract Permabull is Context, IERC20, Ownable {
         uint256 half = contractTokenBalance.div(2);
         uint256 otherHalf = contractTokenBalance.sub(half);
 
-        // capture the contract's current ETH balance.
-        // this is so that we can capture exactly the amount of ETH that the
-        // swap creates, and not make the liquidity event include any ETH that
+        // capture the contract's current BNB balance.
+        // this is so that we can capture exactly the amount of BNB that the
+        // swap creates, and not make the liquidity event include any BNB that
         // has been manually sent to the contract
         uint256 initialBalance = address(this).balance;
 
-        // swap tokens for ETH
-        swapTokensForEth(half); // <- this breaks the ETH -> HATE swap when swap+liquify is triggered
+        // swap tokens for BNB
+        swapTokensForETH(half); // <- this breaks the BNB -> HATE swap when swap+liquify is triggered
 
-        // how much ETH did we just swap into?
+        // how much BNB did we just swap into?
         uint256 newBalance = address(this).balance.sub(initialBalance);
 
-        // add liquidity to uniswap
+        // add liquidity to pancakeswap
         addLiquidity(otherHalf, newBalance);
 
         emit SwapAndLiquify(half, newBalance, otherHalf);
     }
 
-    function swapTokensForEth(uint256 tokenAmount) private {
-        // generate the uniswap pair path of token -> weth
+    function buySaintWithLeftoverBNB(uint256 amount) external onlyOwner {
+        // buy back SAINT with BNB leftover from SwapAndLiquify to increase SAINT price
+        // see "SSL- 03 | Contract gains non-withdrawable BNB via the swapAndLiquifyfunction"
+        // from Safemoon Certik Audit
+        address[] memory path = new address[](2);
+        path[0] = uniswapV2Router.WETH();
+        path[1] = address(this);
+
+        _approve(address(this), address(uniswapV2Router), amount);
+
+        uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens(
+            amount,
+            path,
+            address(this),
+            block.timestamp
+        );
+    }
+
+    function swapTokensForETH(uint256 tokenAmount) private {
+        // generate the pancakeswap pair path of token -> WBNB
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = uniswapV2Router.WETH();
@@ -1369,7 +1360,7 @@ contract Permabull is Context, IERC20, Ownable {
         // make the swap
         uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
-            0, // accept any amount of ETH
+            0, // accept any amount of BNB
             path,
             address(this),
             block.timestamp
@@ -1378,6 +1369,11 @@ contract Permabull is Context, IERC20, Ownable {
 
     function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
         // approve token transfer to cover all possible scenarios
+        /* "to" account changed to address(this) to mitigate major centralization
+         issue in Safemoon's contract.
+         See "SSL-04 | Centralized risk in addLiquidity" from the Certik
+         audit of Safemoon.
+      */
         _approve(address(this), address(uniswapV2Router), tokenAmount);
 
         // add the liquidity
@@ -1386,9 +1382,10 @@ contract Permabull is Context, IERC20, Ownable {
             tokenAmount,
             0, // slippage is unavoidable
             0, // slippage is unavoidable
-            owner(),
+            address(this),
             block.timestamp
         );
+        //emit AddLiquidityETH(amountA, amountB, liquidity);
     }
 
     //this method is responsible for taking all fee, if takeFee is true
@@ -1398,14 +1395,18 @@ contract Permabull is Context, IERC20, Ownable {
         uint256 amount,
         bool takeFee
     ) private {
+        /* Removed:
+         ".....else  if  (!_isExcluded[sender]  &&  !_isExcluded[recipient])  {{        
+                         _transferStandard(sender, recipient, amount);  }....."
+                         
+        See "SSL-02 | Redundant code" from the Certik audit of Safemoon
+      */
         if (!takeFee) removeAllFee();
 
         if (_isExcluded[sender] && !_isExcluded[recipient]) {
             _transferFromExcluded(sender, recipient, amount);
         } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
             _transferToExcluded(sender, recipient, amount);
-        } else if (!_isExcluded[sender] && !_isExcluded[recipient]) {
-            _transferStandard(sender, recipient, amount);
         } else if (_isExcluded[sender] && _isExcluded[recipient]) {
             _transferBothExcluded(sender, recipient, amount);
         } else {
@@ -1426,11 +1427,13 @@ contract Permabull is Context, IERC20, Ownable {
             uint256 rFee,
             uint256 tTransferAmount,
             uint256 tFee,
-            uint256 tLiquidity
+            uint256 tLiquidity,
+            uint256 tDev
         ) = _getValues(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _takeLiquidity(tLiquidity);
+        _takeDev(tDev);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
     }
@@ -1446,12 +1449,14 @@ contract Permabull is Context, IERC20, Ownable {
             uint256 rFee,
             uint256 tTransferAmount,
             uint256 tFee,
-            uint256 tLiquidity
+            uint256 tLiquidity,
+            uint256 tDev
         ) = _getValues(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
         _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _takeLiquidity(tLiquidity);
+        _takeDev(tDev);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
     }
@@ -1467,13 +1472,36 @@ contract Permabull is Context, IERC20, Ownable {
             uint256 rFee,
             uint256 tTransferAmount,
             uint256 tFee,
-            uint256 tLiquidity
+            uint256 tLiquidity,
+            uint256 tDev
         ) = _getValues(tAmount);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _takeLiquidity(tLiquidity);
+        _takeDev(tDev);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
+    }
+
+    //New Pancakeswap router version?
+    //No problem, just change it!
+    function setRouterAddress(address newRouter) external onlyOwner {
+        IUniswapV2Router02 _uniswapV2newRouter = IUniswapV2Router02(newRouter); //v2 router --> 0x10ED43C718714eb63d5aA57B78B54704E256024E
+        // Create a pancakeswap pair for this new token
+        uniswapV2Pair = IUniswapV2Factory(_uniswapV2newRouter.factory())
+            .createPair(address(this), _uniswapV2newRouter.WETH());
+
+        // set the rest of the contract variables
+        uniswapV2Router = _uniswapV2newRouter;
+    }
+
+    function setCharityWallet(address payable newWallet) external onlyOwner {
+        // in case the charity wallet needs to be updated
+        charityWallet = newWallet;
+    }
+
+    function getMaxTxAmount() external view onlyOwner returns (uint256) {
+        return _maxTxAmount;
     }
 }
