@@ -843,6 +843,7 @@ contract Permabull is Context, IERC20, Ownable {
     address[] private _excluded;
 
     address payable charityWallet = 0x67F78C9C58a613c2f7eAff906AcB22335a5596CF;
+    address burnWallet = 0x000000000000000000000000000000000000dEaD;
 
     uint256 private constant MAX = ~uint256(0);
     uint256 private constant _tTotal = 10000 * 10 ** 9;
@@ -858,6 +859,9 @@ contract Permabull is Context, IERC20, Ownable {
 
     uint256 public _devFee = 0;
     uint256 private _previousDevFee = _devFee;
+
+    uint256 public _burnFee = 0;
+    uint256 private _previousBurnFee = _burnFee;
 
     uint256 public _liquidityFee = 0;
     uint256 private _previousLiquidityFee = _liquidityFee;
@@ -1020,10 +1024,10 @@ contract Permabull is Context, IERC20, Ownable {
     ) public view returns (uint256) {
         require(tAmount <= _tTotal, "Amount must be less than supply");
         if (!deductTransferFee) {
-            (uint256 rAmount, , , , , , ) = _getValues(tAmount);
+            (uint256 rAmount, , , , ) = _getValues(tAmount);
             return rAmount;
         } else {
-            (, uint256 rTransferAmount, , , , , ) = _getValues(tAmount);
+            (, uint256 rTransferAmount, , , ) = _getValues(tAmount);
             return rTransferAmount;
         }
     }
@@ -1076,17 +1080,16 @@ contract Permabull is Context, IERC20, Ownable {
             uint256 rTransferAmount,
             uint256 rFee,
             uint256 tTransferAmount,
-            uint256 tFee,
-            uint256 tLiquidity,
-            uint256 tDev
+            TFees memory tFees
         ) = _getValues(tAmount);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
         _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
-        _takeLiquidity(tLiquidity);
-        _takeDev(tDev);
-        _reflectFee(rFee, tFee);
+        _takeLiquidity(tFees.tLiquidity);
+        _takeDev(tFees.tDev);
+        _takeBurn(tFees.tBurn);
+        _reflectFee(rFee, tFees.tFee);
         emit Transfer(sender, recipient, tTransferAmount);
     }
 
@@ -1104,6 +1107,10 @@ contract Permabull is Context, IERC20, Ownable {
 
     function setDevFeePercent(uint256 devFee) external onlyOwner {
         _devFee = devFee;
+    }
+
+    function setBurnFeePercent(uint256 burnFee) external onlyOwner {
+        _burnFee = burnFee;
     }
 
     function setLiquidityFeePercent(uint256 liquidityFee) external onlyOwner {
@@ -1129,43 +1136,42 @@ contract Permabull is Context, IERC20, Ownable {
 
     function _getValues(
         uint256 tAmount
-    )
-        private
-        view
-        returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256)
-    {
-        (
-            uint256 tTransferAmount,
-            uint256 tFee,
-            uint256 tLiquidity,
-            uint tDev
-        ) = _getTValues(tAmount);
+    ) private view returns (uint256, uint256, uint256, uint256, TFees memory) {
+        (uint256 tTransferAmount, TFees memory tFees) = _getTValues(tAmount);
         (uint256 rAmount, uint256 rTransferAmount, uint256 rFee) = _getRValues(
             tAmount,
-            tFee,
-            tLiquidity,
-            tDev,
+            tFees.tFee,
+            tFees.tLiquidity,
+            tFees.tDev,
+            tFees.tBurn,
             _getRate()
         );
-        return (
-            rAmount,
-            rTransferAmount,
-            rFee,
-            tTransferAmount,
-            tFee,
-            tLiquidity,
-            tDev
-        );
+        return (rAmount, rTransferAmount, rFee, tTransferAmount, tFees);
+    }
+
+    struct TFees {
+        uint256 tFee;
+        uint256 tLiquidity;
+        uint256 tDev;
+        uint256 tBurn;
     }
 
     function _getTValues(
         uint256 tAmount
-    ) private view returns (uint256, uint256, uint256, uint256) {
-        uint256 tFee = calculateTaxFee(tAmount);
-        uint256 tDev = calculateDevFee(tAmount);
-        uint256 tLiquidity = calculateLiquidityFee(tAmount);
-        uint256 tTransferAmount = tAmount.sub(tFee).sub(tLiquidity).sub(tDev);
-        return (tTransferAmount, tFee, tLiquidity, tDev);
+    ) private view returns (uint256, TFees memory) {
+        TFees memory _tFees = TFees({
+            tFee: calculateTaxFee(tAmount),
+            tLiquidity: calculateLiquidityFee(tAmount),
+            tDev: calculateDevFee(tAmount),
+            tBurn: calculateBurnFee(tAmount)
+        });
+
+        uint256 tTransferAmount = tAmount
+            .sub(_tFees.tFee)
+            .sub(_tFees.tLiquidity)
+            .sub(_tFees.tDev)
+            .sub(_tFees.tBurn);
+        return (tTransferAmount, _tFees);
     }
 
     function _getRValues(
@@ -1173,13 +1179,19 @@ contract Permabull is Context, IERC20, Ownable {
         uint256 tFee,
         uint256 tLiquidity,
         uint256 tDev,
+        uint256 tBurn,
         uint256 currentRate
     ) private pure returns (uint256, uint256, uint256) {
         uint256 rAmount = tAmount.mul(currentRate);
         uint256 rFee = tFee.mul(currentRate);
         uint256 rLiquidity = tLiquidity.mul(currentRate);
         uint256 rDev = tDev.mul(currentRate);
-        uint256 rTransferAmount = rAmount.sub(rFee).sub(rLiquidity).sub(rDev);
+        uint256 rBurn = tBurn.mul(currentRate);
+        uint256 rTransferAmount = rAmount
+            .sub(rFee)
+            .sub(rLiquidity)
+            .sub(rDev)
+            .sub(rBurn);
         return (rAmount, rTransferAmount, rFee);
     }
 
@@ -1219,12 +1231,24 @@ contract Permabull is Context, IERC20, Ownable {
             _tOwned[charityWallet] = _tOwned[charityWallet].add(tDev);
     }
 
+    function _takeBurn(uint256 tDev) private {
+        uint256 currentRate = _getRate();
+        uint256 rDev = tDev.mul(currentRate);
+        _rOwned[burnWallet] = _rOwned[burnWallet].add(rDev);
+        if (_isExcluded[burnWallet])
+            _tOwned[burnWallet] = _tOwned[burnWallet].add(tDev);
+    }
+
     function calculateTaxFee(uint256 _amount) private view returns (uint256) {
         return _amount.mul(_taxFee).div(10 ** 2);
     }
 
     function calculateDevFee(uint256 _amount) private view returns (uint256) {
         return _amount.mul(_devFee).div(10 ** 2);
+    }
+
+    function calculateBurnFee(uint256 _amount) private view returns (uint256) {
+        return _amount.mul(_burnFee).div(10 ** 2);
     }
 
     function calculateLiquidityFee(
@@ -1234,21 +1258,25 @@ contract Permabull is Context, IERC20, Ownable {
     }
 
     function removeAllFee() private {
-        if (_taxFee == 0 && _liquidityFee == 0 && _devFee == 0) return;
+        if (_taxFee == 0 && _liquidityFee == 0 && _devFee == 0 && _burnFee == 0)
+            return;
 
         _previousTaxFee = _taxFee;
         _previousLiquidityFee = _liquidityFee;
         _previousDevFee = _devFee;
+        _previousBurnFee = _burnFee;
 
         _taxFee = 0;
         _liquidityFee = 0;
         _devFee = 0;
+        _burnFee = 0;
     }
 
     function restoreAllFee() private {
         _taxFee = _previousTaxFee;
         _liquidityFee = _previousLiquidityFee;
         _devFee = _previousDevFee;
+        _burnFee = _previousBurnFee;
     }
 
     function isExcludedFromFee(address account) public view returns (bool) {
@@ -1426,15 +1454,14 @@ contract Permabull is Context, IERC20, Ownable {
             uint256 rTransferAmount,
             uint256 rFee,
             uint256 tTransferAmount,
-            uint256 tFee,
-            uint256 tLiquidity,
-            uint256 tDev
+            TFees memory tFees
         ) = _getValues(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
-        _takeLiquidity(tLiquidity);
-        _takeDev(tDev);
-        _reflectFee(rFee, tFee);
+        _takeLiquidity(tFees.tLiquidity);
+        _takeDev(tFees.tDev);
+        _takeBurn(tFees.tBurn);
+        _reflectFee(rFee, tFees.tFee);
         emit Transfer(sender, recipient, tTransferAmount);
     }
 
@@ -1448,16 +1475,15 @@ contract Permabull is Context, IERC20, Ownable {
             uint256 rTransferAmount,
             uint256 rFee,
             uint256 tTransferAmount,
-            uint256 tFee,
-            uint256 tLiquidity,
-            uint256 tDev
+            TFees memory tFees
         ) = _getValues(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
         _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
-        _takeLiquidity(tLiquidity);
-        _takeDev(tDev);
-        _reflectFee(rFee, tFee);
+        _takeLiquidity(tFees.tLiquidity);
+        _takeDev(tFees.tDev);
+        _takeBurn(tFees.tBurn);
+        _reflectFee(rFee, tFees.tFee);
         emit Transfer(sender, recipient, tTransferAmount);
     }
 
@@ -1471,16 +1497,15 @@ contract Permabull is Context, IERC20, Ownable {
             uint256 rTransferAmount,
             uint256 rFee,
             uint256 tTransferAmount,
-            uint256 tFee,
-            uint256 tLiquidity,
-            uint256 tDev
+            TFees memory tFees
         ) = _getValues(tAmount);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
-        _takeLiquidity(tLiquidity);
-        _takeDev(tDev);
-        _reflectFee(rFee, tFee);
+        _takeLiquidity(tFees.tLiquidity);
+        _takeDev(tFees.tDev);
+        _takeBurn(tFees.tBurn);
+        _reflectFee(rFee, tFees.tFee);
         emit Transfer(sender, recipient, tTransferAmount);
     }
 
